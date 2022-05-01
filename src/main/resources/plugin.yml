@@ -1,0 +1,55 @@
+name: SuperCraftBros
+main: net.dmulloy2.supercraftbros.SuperCraftBros
+version: ${project.version} (Build ${project.build.number})
+author: dmulloy2
+description: Comprehensive arena plugin attempting to mimic the popular game "SuperSmashBros"
+softdepend: [WorldEdit, Vault]
+commands:
+  scb:
+    description: SuperCraftBros main command
+    usage: /<command> <args>
+    aliases: [supercraftbros]
+permissions:
+  supercraftbros.admin:
+    description: Allows access to all SuperCraftBros features
+    children:
+      supercraftbros.delete: true
+      supercraftbros.kick: true
+      supercraftbros.reload: true
+      supercraftbros.builder: true
+  supercraftbros.builder:
+    description: Allows access to features meant for builders
+    children:
+      supercraftbros.abandon: true
+      supercraftbros.create: true
+      supercraftbros.setpoint: true
+      supercraftbros.spawn: true
+      supercraftbros.build: true
+      supercraftbros.join: true
+  supercraftbros.abandon:
+    description: Allows access to '/scb abandon'
+    default: false
+  supercraftbros.create:
+    description: Allows access to '/scb create'
+    default: false
+  supercraftbros.delete:
+    description: Allows access to '/scb delete'
+    default: false
+  supercraftbros.kick:   
+    description: Allows access to '/scb kick'
+    default: false
+  supercraftbros.reload:
+    description: Allows access to '/scb reload'
+    default: false
+  supercraftbros.setpoint:
+    description: Allows access to '/scb setpoint'
+    default: false
+  supercraftbros.spawn:
+    description: Allows access to '/scb spawn'
+    default: false
+  supercraftbros.join:   
+    description: Allows the joining of arenas
+    default: true
+  supercraftbros.build:
+    description: Allows building in arenas
+    default: false

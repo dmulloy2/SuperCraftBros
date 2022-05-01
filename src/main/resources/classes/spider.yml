@@ -1,0 +1,13 @@
+icon: "287:0, 1"
+description:
+  - "Spiders!! RUN!!"
+  - "Will you win?"
+armor:
+  helmet: "head:spider"
+  chestplate: "299:0, 1"
+  leggings: "300:0, 1"
+  boots: "301:0, 1, feather:10"
+weapons:
+  '1': "373:16386, 20"
+  '2': "375:0, 1, knockback:1, sharp:2"
+color: "RED"

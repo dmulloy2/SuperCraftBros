@@ -1,0 +1,12 @@
+icon: "head:zombie"
+description:
+  - "Equipped with a shovel"
+  - "that causes extra damage"
+armor:
+  helmet: "head:zombie"
+  chestplate: "299:0, 1"
+  leggings: "300:0, 1"
+  boots: "301:0, 1, feather:10"
+weapons:
+  '1': "256:0, 1, sharp:2, knockback:1"
+color: "BLUE"
