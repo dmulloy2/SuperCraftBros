@@ -18,10 +18,8 @@
 package net.dmulloy2.supercraftbros;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.Getter;
 import net.dmulloy2.SwornAPI;
@@ -47,7 +45,6 @@ import net.dmulloy2.supercraftbros.handlers.ArenaDataHandler;
 import net.dmulloy2.supercraftbros.handlers.ClassHandler;
 import net.dmulloy2.supercraftbros.handlers.SignHandler;
 import net.dmulloy2.supercraftbros.integration.EssentialsHandler;
-import net.dmulloy2.supercraftbros.integration.WorldEditHandler;
 import net.dmulloy2.supercraftbros.listeners.BlockListener;
 import net.dmulloy2.supercraftbros.listeners.EntityListener;
 import net.dmulloy2.supercraftbros.listeners.PlayerListener;
@@ -59,8 +56,8 @@ import net.dmulloy2.supercraftbros.types.ArenaData;
 import net.dmulloy2.supercraftbros.types.ArenaPlayer;
 import net.dmulloy2.supercraftbros.types.ArenaSign;
 import net.dmulloy2.util.FormatUtil;
-import net.dmulloy2.util.Util;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -73,9 +70,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class SuperCraftBros extends SwornPlugin
 {
-	/** Handlers **/
 	private @Getter EssentialsHandler essentialsHandler;
-	private @Getter WorldEditHandler worldEditHandler;
 	private @Getter ArenaDataHandler arenaDataHandler;
 	private @Getter ResourceHandler resourceHandler;
 	private @Getter ClassHandler classHandler;
@@ -83,15 +78,14 @@ public class SuperCraftBros extends SwornPlugin
 	private @Getter SignHandler signHandler;
 	private @Getter GUIHandler guiHandler;
 
-	/** Lists and Maps **/
-	private @Getter Map<String, ArenaJoinTask> waiting;
+	private @Getter Map<UUID, ArenaJoinTask> waiting;
 
 	private List<Arena> activeArenas;
 	private @Getter List<ArenaSign> signs;
 	private @Getter List<ArenaClass> classes;
-	private @Getter List<ArenaCreator> creators;
+	private @Getter Map<UUID, ArenaCreator> creators;
 
-	private @Getter String prefix = FormatUtil.format("&4[&6&lSCB&4]&r ");
+	private final @Getter String prefix = FormatUtil.format("&4[&6&lSCB&4]&r ");
 
 	@Override
 	public void onLoad()
@@ -103,15 +97,12 @@ public class SuperCraftBros extends SwornPlugin
 	public void onEnable()
 	{
 		long start = System.currentTimeMillis();
-
-		/** Check Directories **/
+ 
 		checkDirectories();
 
-		/** Configuration **/
 		saveDefaultConfig();
 		reloadConfig();
 
-		/** Register Handlers **/
 		logHandler = new LogHandler(this);
 
 		File messages = new File(getDataFolder(), "messages.properties");
@@ -124,29 +115,22 @@ public class SuperCraftBros extends SwornPlugin
 		arenaDataHandler = new ArenaDataHandler(this);
 		permissionHandler = new PermissionHandler(this);
 
-		/** Initialize Variables **/
 		waiting = new HashMap<>();
 		signs = new ArrayList<>();
 		classes = new ArrayList<>();
-		creators = new ArrayList<>();
+		creators = new ConcurrentHashMap<>();
 		activeArenas = new ArrayList<>();
 
-		/** Integration **/
 		setupIntegration();
-
-		/** Load Data **/
-		arenaDataHandler.load();
 
 		classHandler = new ClassHandler(this);
 		signHandler = new SignHandler(this);
 
-		/** Register Listeners **/
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(new BlockListener(this), this);
 		pm.registerEvents(new EntityListener(this), this);
 		pm.registerEvents(new PlayerListener(this), this);
 
-		/** Register Commands **/
 		commandHandler.setCommandPrefix("scb");
 		commandHandler.registerPrefixedCommand(new CmdAbandon(this));
 		commandHandler.registerPrefixedCommand(new CmdCreate(this));
@@ -160,10 +144,8 @@ public class SuperCraftBros extends SwornPlugin
 		commandHandler.registerPrefixedCommand(new CmdSetPoint(this));
 		commandHandler.registerPrefixedCommand(new CmdSpawn(this));
 
-		/** Load Classes **/
 		loadClasses();
 
-		/** GUI Hook **/
 		guiHandler = new GUIHandler(this);
 
 		logHandler.log(getMessage("log_enabled"), getDescription().getFullName(), System.currentTimeMillis() - start);
@@ -174,17 +156,14 @@ public class SuperCraftBros extends SwornPlugin
 	{
 		long start = System.currentTimeMillis();
 
-		/** Cancel tasks / services **/
 		getServer().getServicesManager().unregisterAll(this);
 		getServer().getScheduler().cancelTasks(this);
-
-		/** Stop Arenas **/
+ 
 		for (Arena a : activeArenas)
 		{
 			a.stop();
 		}
 
-		/** Save Data **/
 		arenaDataHandler.save();
 		signHandler.onDisable();
 
@@ -194,7 +173,7 @@ public class SuperCraftBros extends SwornPlugin
 	/**
 	 * Check and create directories
 	 */
-	private final void checkDirectories()
+	private void checkDirectories()
 	{
 		File dataFolder = getDataFolder();
 		if (! dataFolder.exists())
@@ -215,55 +194,45 @@ public class SuperCraftBros extends SwornPlugin
 		}
 	}
 
-	private final void setupIntegration()
+	private void setupIntegration()
 	{
 		try
 		{
 			essentialsHandler = new EssentialsHandler(this);
-		} catch (Throwable ex) { }
+		} catch (Throwable ignored) { }
 
 		try
 		{
 			vaultHandler = new VaultHandler(this);
-		} catch (Throwable ex) { }
-
-		try
-		{
-			worldEditHandler = new WorldEditHandler(this);
-		} catch (Throwable ex) { }
+		} catch (Throwable ignored) { }
 	}
 
-	public final boolean isEssentialsEnabled()
+	public boolean isEssentialsEnabled()
 	{
 		return essentialsHandler != null && essentialsHandler.isEnabled();
 	}
 
-	public final boolean isVaultEnabled()
+	public boolean isVaultEnabled()
 	{
 		return vaultHandler != null && vaultHandler.isEnabled();
 	}
 
-	public final boolean isWorldEditEnabled()
-	{
-		return worldEditHandler != null && worldEditHandler.isEnabled();
-	}
-
-	public final String getMessage(String key)
+	public String getMessage(String key)
 	{
 		return resourceHandler.getMessage(key);
 	}
 
-	public final void addActiveArena(Arena arena)
+	public void addActiveArena(Arena arena)
 	{
 		activeArenas.add(arena);
 	}
 
-	public final void removeActiveArena(Arena arena)
+	public void removeActiveArena(Arena arena)
 	{
 		activeArenas.remove(arena);
 	}
 
-	public final boolean isActiveArena(String arena)
+	public boolean isActiveArena(String arena)
 	{
 		for (Arena a : activeArenas)
 		{
@@ -274,7 +243,7 @@ public class SuperCraftBros extends SwornPlugin
 		return false;
 	}
 
-	public final Arena getArena(String name)
+	public Arena getArena(String name)
 	{
 		for (Arena a : activeArenas)
 		{
@@ -285,7 +254,7 @@ public class SuperCraftBros extends SwornPlugin
 		return null;
 	}
 
-	public final Arena getArena(Player player)
+	public Arena getArena(Player player)
 	{
 		ArenaPlayer ap = getArenaPlayer(player);
 		if (ap != null)
@@ -296,7 +265,7 @@ public class SuperCraftBros extends SwornPlugin
 		return null;
 	}
 
-	public final ArenaPlayer getArenaPlayer(Player player)
+	public ArenaPlayer getArenaPlayer(Player player)
 	{
 		for (Arena a : activeArenas)
 		{
@@ -310,50 +279,42 @@ public class SuperCraftBros extends SwornPlugin
 		return null;
 	}
 
-	public final boolean isInArena(Player player)
+	public boolean isInArena(Player player)
 	{
 		return getArenaPlayer(player) != null;
 	}
 
-	public final boolean isValidArena(String name)
+	public boolean isValidArena(String name)
 	{
 		return arenaDataHandler.getData(name) != null;
 	}
 
-	public final ArenaCreator addCreator(Player player, String name)
+	public void addCreator(Player player, String name)
 	{
-		ArenaCreator ac = new ArenaCreator(this, player, name);
-		creators.add(ac);
-		return ac;
+		creators.put(player.getUniqueId(), new ArenaCreator(this, player, name));
 	}
 
-	public final ArenaCreator getArenaCreator(Player player)
+	public ArenaCreator getArenaCreator(Player player)
 	{
-		for (ArenaCreator ac : creators)
-		{
-			if (ac.getName().equals(player.getName()))
-				return ac;
-		}
-
-		return null;
+		return creators.get(player.getUniqueId());
 	}
 
-	public final boolean isCreatingArena(Player player)
+	public boolean isCreatingArena(Player player)
 	{
 		return getArenaCreator(player) != null;
 	}
 
-	public final void removeArenaCreator(ArenaCreator ac)
+	public void removeArenaCreator(ArenaCreator ac)
 	{
-		creators.remove(ac);
+		creators.remove(ac.getPlayer().getUniqueId());
 	}
 
-	public final boolean deleteArena(String name)
+	public boolean deleteArena(String name)
 	{
 		return arenaDataHandler.deleteData(name);
 	}
 
-	private final void loadClasses()
+	private void loadClasses()
 	{
 		File folder = new File(getDataFolder(), "classes");
 		File[] children = folder.listFiles();
@@ -371,7 +332,7 @@ public class SuperCraftBros extends SwornPlugin
 		}
 	}
 
-	public final ArenaClass getClass(String name)
+	public ArenaClass getClass(String name)
 	{
 		for (ArenaClass ac : classes)
 		{
@@ -382,7 +343,7 @@ public class SuperCraftBros extends SwornPlugin
 		return null;
 	}
 
-	public final ArenaClass getClass(ItemStack stack)
+	public ArenaClass getClass(ItemStack stack)
 	{
 		for (ArenaClass ac : classes)
 		{
@@ -441,7 +402,7 @@ public class SuperCraftBros extends SwornPlugin
 					int seconds = getConfig().getInt("joinTimer.seconds");
 					player.sendMessage(prefix + FormatUtil.format("&6Please wait for {0} seconds!", seconds));
 
-					new ArenaJoinTask(player, a).runTaskLater(this, seconds * 20);
+					new ArenaJoinTask(player, a).runTaskLater(this, seconds * 20L);
 				}
 				else
 				{
@@ -455,36 +416,31 @@ public class SuperCraftBros extends SwornPlugin
 		}
 	}
 
-	public final boolean isWaiting(Player player)
+	public boolean isWaiting(Player player)
 	{
-		return waiting.containsKey(player);
+		return waiting.containsKey(player.getUniqueId());
 	}
 
 	public class ArenaJoinTask extends BukkitRunnable
 	{
-		private final String name;
+		private final UUID playerId;
 		private final Arena arena;
 
 		public ArenaJoinTask(final Player player, final Arena arena)
 		{
-			this.name = player.getName();
+			this.playerId = player.getUniqueId();
 			this.arena = arena;
 
-			waiting.put(name, this);
+			waiting.put(player.getUniqueId(), this);
 		}
 
 		@Override
 		public void run()
 		{
-			Player player = getPlayer();
+			Player player = Bukkit.getPlayer(playerId);
 			if (player != null)
 				arena.addPlayer(player);
-			waiting.remove(name);
-		}
-
-		public Player getPlayer()
-		{
-			return Util.matchPlayer(name);
+			waiting.remove(playerId	);
 		}
 	}
 

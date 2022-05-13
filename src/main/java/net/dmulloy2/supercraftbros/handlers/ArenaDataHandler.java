@@ -19,7 +19,7 @@ public class ArenaDataHandler
 	private final String extension = ".dat";
 	private final String folderName = "arenas";
 
-	private HashMap<String, ArenaData> data;
+	private final HashMap<String, ArenaData> data;
 
 	private final SuperCraftBros plugin;
 
@@ -29,7 +29,7 @@ public class ArenaDataHandler
 		if (! folder.exists())
 			folder.mkdir();
 
-		this.data = new HashMap<String, ArenaData>();
+		this.data = new HashMap<>();
 		this.plugin = plugin;
 		this.loadAllData();
 	}
@@ -124,15 +124,18 @@ public class ArenaDataHandler
 
 	public Map<String, ArenaData> getAllArenaData()
 	{
-		Map<String, ArenaData> data = new HashMap<String, ArenaData>();
-		data.putAll(this.data);
-		for (File file : folder.listFiles())
+		Map<String, ArenaData> data = new HashMap<>(this.data);
+		File[] files = folder.listFiles();
+		if (files != null)
 		{
-			if (file.getName().contains(extension))
+			for (File file : files)
 			{
-				String fileName = file.getName().replaceAll(extension, "");
-				if (! isFileAlreadyLoaded(fileName, data))
-					data.put(fileName, loadData(fileName));
+				if (file.getName().contains(extension))
+				{
+					String fileName = file.getName().replaceAll(extension, "");
+					if (! isFileAlreadyLoaded(fileName, data))
+						data.put(fileName, loadData(fileName));
+				}
 			}
 		}
 
@@ -145,13 +148,17 @@ public class ArenaDataHandler
 
 		plugin.getLogHandler().log("Loading {0} from disk...", folderName);
 
-		for (File file : folder.listFiles())
+		File[] files = folder.listFiles();
+		if (files != null)
 		{
-			if (file.getName().contains(extension))
+			for (File file : files)
 			{
-				String fileName = file.getName().replaceAll(extension, "");
-				if (! isFileAlreadyLoaded(fileName, data))
-					data.put(fileName, loadData(fileName));
+				if (file.getName().contains(extension))
+				{
+					String fileName = file.getName().replaceAll(extension, "");
+					if (! isFileAlreadyLoaded(fileName, data))
+						data.put(fileName, loadData(fileName));
+				}
 			}
 		}
 
@@ -167,20 +174,5 @@ public class ArenaDataHandler
 		}
 
 		return false;
-	}
-
-	public void load()
-	{
-		for (File file : folder.listFiles())
-		{
-			try
-			{
-				FileSerialization.load(file, ArenaData.class);
-			}
-			catch (Throwable ex)
-			{
-				plugin.getLogHandler().log(Level.WARNING, Util.getUsefulStack(ex, "loading arena {0}", file));
-			}
-		}
 	}
 }

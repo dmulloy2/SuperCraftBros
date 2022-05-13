@@ -11,8 +11,8 @@ public class Board
 {
 	private boolean xaxis;
 
-	private ArenaPlayer ap;
-	private ArenaField field;
+	private final ArenaPlayer ap;
+	private final ArenaField field;
 
 	public Board(Arena arena, ArenaPlayer ap)
 	{
@@ -22,7 +22,7 @@ public class Board
 		this.setup();
 	}
 
-	private final void setup()
+	private void setup()
 	{
 		for (int i = 1; i < 4; i++)
 		{

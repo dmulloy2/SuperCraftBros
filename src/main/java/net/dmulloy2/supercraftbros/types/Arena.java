@@ -21,6 +21,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -49,16 +50,16 @@ public class Arena
 	private int countdownTask;
 
 	// Fields
-	private ArenaField arenaField;
-	private ArenaField lobbyField;
+	private final ArenaField arenaField;
+	private final ArenaField lobbyField;
 
 	// Lists
-	private List<Board> boards;
-	private List<ArenaPlayer> active;
-	private List<ArenaPlayer> inactive;
+	private final List<Board> boards;
+	private final List<ArenaPlayer> active;
+	private final List<ArenaPlayer> inactive;
 
-	private String name;
-	private ArenaData data;
+	private final String name;
+	private final ArenaData data;
 
 	private final SuperCraftBros plugin;
 
@@ -91,7 +92,7 @@ public class Arena
 	// Add player
 	// ------------------------------------//
 
-	public final void addPlayer(Player player)
+	public void addPlayer(Player player)
 	{
 		ArenaPlayer ap = new ArenaPlayer(plugin, player, this, getPlayerCount());
 
@@ -137,19 +138,19 @@ public class Arena
 	// Spawning
 	// ------------------------------------//
 
-	public final void spawn(ArenaPlayer ap)
+	public void spawn(ArenaPlayer ap)
 	{
 		teleport(ap.getPlayer(), getSpawn(ap));
 
 		ap.giveClassItems();
 	}
 
-	private final LazyLocation getSpawn(ArenaPlayer ap)
+	private LazyLocation getSpawn(ArenaPlayer ap)
 	{
 		return data.getSpawns().get(ap.getId());
 	}
 
-	private final void spawnAll()
+	private void spawnAll()
 	{
 		plugin.getLogHandler().log("Spawning all players for Arena: {0}", data.getName());
 
@@ -169,7 +170,7 @@ public class Arena
 
 	private int countdown;
 
-	private final void startCountdown()
+	private void startCountdown()
 	{
 		this.gameMode = Mode.STARTING;
 
@@ -182,7 +183,7 @@ public class Arena
 
 	}
 
-	private final void countdown()
+	private void countdown()
 	{
 		if (countdown == 15 || countdown == 10 || countdown < 6)
 		{
@@ -214,7 +215,7 @@ public class Arena
 
 	private boolean started;
 
-	private final void start()
+	private void start()
 	{
 		if (! started)
 			return;
@@ -234,14 +235,14 @@ public class Arena
 	// Random Item Drops
 	// ------------------------------------//
 
-	private final void setupRandomDrops()
+	private void setupRandomDrops()
 	{
 		if (plugin.getConfig().getBoolean("randomItemDrops.enabled"))
 		{
-			List<ItemStack> drops = new ArrayList<ItemStack>();
+			List<ItemStack> drops = new ArrayList<>();
 			for (String i : plugin.getConfig().getStringList("randomItemDrops.items"))
 			{
-				ItemStack stack = ItemUtil.readItem(i);
+				ItemStack stack = ItemUtil.readItem(i, plugin);
 				if (stack != null)
 				{
 					drops.add(stack);
@@ -255,7 +256,7 @@ public class Arena
 	@AllArgsConstructor
 	public class RandomDropTask extends BukkitRunnable
 	{
-		private final List<ItemStack> drops;
+		private List<ItemStack> drops;
 
 		@Override
 		public void run()
@@ -267,8 +268,7 @@ public class Arena
 				if (stack != null && stack.getType() != Material.AIR)
 				{
 					LazyLocation loc = arenaField.getRandomLocation(256);
-					if (loc != null)
-						loc.getWorld().dropItemNaturally(loc.getLocation(), drops.get(rand));
+					loc.getWorld().dropItemNaturally(loc.getLocation(), drops.get(rand));
 				}
 			}
 			else
@@ -282,7 +282,7 @@ public class Arena
 	// Tell players
 	// ------------------------------------//
 
-	private final void tellPlayers(String string, Object... objects)
+	private void tellPlayers(String string, Object... objects)
 	{
 		for (ArenaPlayer activePlayer : active)
 		{
@@ -331,7 +331,7 @@ public class Arena
 		plugin.removeActiveArena(this);
 	}
 
-	private final void clearEntities()
+	private void clearEntities()
 	{
 		for (Entity entity : data.getWorld().getEntities())
 		{
@@ -347,7 +347,7 @@ public class Arena
 			EntityType.ITEM_FRAME, EntityType.PLAYER, EntityType.VILLAGER
 			);
 
-	public final void endPlayer(ArenaPlayer ap)
+	public void endPlayer(ArenaPlayer ap)
 	{
 		ap.setLives(0);
 		ap.setActive(false);
@@ -362,7 +362,7 @@ public class Arena
 		updateSigns();
 	}
 
-	public final void leaveArena(ArenaPlayer ap, ArenaLeaveReason reason)
+	public void leaveArena(ArenaPlayer ap, ArenaLeaveReason reason)
 	{
 		if (reason == ArenaLeaveReason.COMMAND)
 		{
@@ -418,7 +418,7 @@ public class Arena
 		}
 	}
 
-	private final boolean checkEmpty()
+	private boolean checkEmpty()
 	{
 		if (getPlayerCount() == 1)
 		{
@@ -449,35 +449,34 @@ public class Arena
 	// Player Death
 	// ------------------------------------//
 
-	public final void onPlayerDeath(ArenaPlayer ap)
+	public void onPlayerDeath(ArenaPlayer ap)
 	{
 		ap.setLives(ap.getLives() -1);
 
 		Player player = ap.getPlayer();
 		if (player.getKiller() != null)
 		{
-			Entity entity = player.getKiller();
-			if (entity instanceof Player)
+			Player entity = player.getKiller();
+			if (entity != null)
 			{
-				Player killer = (Player) entity;
-				String weapon = getWeapon(killer);
+				String weapon = getWeapon(entity);
 
-				tellPlayers("&a{0} &fkilled &c{1} &fwith {2}", killer.getName(), player.getName(), weapon);
-			}
-			else if (entity instanceof LivingEntity)
-			{
-				LivingEntity killer = (LivingEntity) entity;
-				String name = FormatUtil.getFriendlyName(killer.getType());
-				String article = FormatUtil.getArticle(name);
-
-				tellPlayers("&a{0} &fwas killed by {1} &c{2}", player.getName(), article, name);
+				tellPlayers("&a{0} &fkilled &c{1} &fwith {2}", entity.getName(), player.getName(), weapon);
 			}
 			else
 			{
-				DamageCause cause = player.getLastDamageCause().getCause();
-				String dc = FormatUtil.getFriendlyName(cause.toString());
+				EntityDamageEvent damageEvent = player.getLastDamageCause();
+				if (damageEvent != null)
+				{
+					DamageCause cause = damageEvent.getCause();
+					String dc = FormatUtil.getFriendlyName(cause.toString());
 
-				tellPlayers("&a{0} &fwas killed by &c{1}", player.getName(), dc);
+					tellPlayers("&a{0} &fwas killed by &c{1}", player.getName(), dc);
+				}
+				else
+				{
+					tellPlayers("&a{0} died under mysterious circumstances", player.getName());
+				}
 			}
 		}
 
@@ -494,10 +493,10 @@ public class Arena
 		updateBoards();
 	}
 
-	private final String getWeapon(Player player)
+	private String getWeapon(Player player)
 	{
 		ItemStack inHand = player.getInventory().getItemInMainHand();
-		if (inHand == null || inHand.getType() == Material.AIR)
+		if (inHand.getType() == Material.AIR)
 		{
 			return "&chis fists";
 		}
@@ -513,7 +512,7 @@ public class Arena
 	// Reward
 	// ------------------------------------//
 
-	private final void reward(ArenaPlayer ap)
+	private void reward(ArenaPlayer ap)
 	{
 		if (plugin.getConfig().getBoolean("rewards.enabled"))
 		{
@@ -530,7 +529,7 @@ public class Arena
 
 			for (String s : plugin.getConfig().getStringList("rewards.items"))
 			{
-				ItemStack stack = ItemUtil.readItem(s);
+				ItemStack stack = ItemUtil.readItem(s, plugin);
 				if (stack != null)
 				{
 					player.getInventory().addItem(stack);
@@ -543,7 +542,7 @@ public class Arena
 	// Boards
 	// ------------------------------------//
 
-	public final void updateBoards()
+	public void updateBoards()
 	{
 		for (Board board : boards)
 		{
@@ -551,7 +550,7 @@ public class Arena
 		}
 	}
 
-	public final void clearBoards()
+	public void clearBoards()
 	{
 		for (Board board : boards)
 		{
@@ -561,7 +560,7 @@ public class Arena
 		boards.clear();
 	}
 
-	public final void setupBoards()
+	public void setupBoards()
 	{
 		for (ArenaPlayer ap : active)
 		{
@@ -573,13 +572,13 @@ public class Arena
 	// Teleportation
 	// ------------------------------------//
 
-	public final void teleport(Player player, LazyLocation lazyLocation)
+	public void teleport(Player player, LazyLocation lazyLocation)
 	{
 		teleport(player, lazyLocation.getLocation());
 
 	}
 
-	public final void teleport(Player player, Location location)
+	public void teleport(Player player, Location location)
 	{
 		player.teleport(location.clone().add(0.5D, 1.0D, 0.5D));
 	}
@@ -588,7 +587,7 @@ public class Arena
 	// Signs
 	// ------------------------------------//
 
-	public final void updateSigns()
+	public void updateSigns()
 	{
 		plugin.getSignHandler().updateSigns(name);
 	}
@@ -597,7 +596,7 @@ public class Arena
 	// Getters
 	// ------------------------------------//
 
-	public final int getPlayerCount()
+	public int getPlayerCount()
 	{
 		return active.size();
 	}

@@ -32,9 +32,10 @@ public class SignHandler
 	private File file;
 	private FileConfiguration signsSave;
 
-	private @Getter List<ArenaSign> signs;
+	private final @Getter List<ArenaSign> signs;
 
 	private final SuperCraftBros plugin;
+
 	public SignHandler(SuperCraftBros plugin)
 	{
 		this.plugin = plugin;
@@ -42,7 +43,7 @@ public class SignHandler
 		this.loadFromDisk();
 	}
 
-	private final void loadFromDisk()
+	private void loadFromDisk()
 	{
 		try
 		{
@@ -91,7 +92,7 @@ public class SignHandler
 		}
 	}
 
-	private final void saveToDisk()
+	private void saveToDisk()
 	{
 		try
 		{
@@ -113,7 +114,7 @@ public class SignHandler
 		}
 	}
 
-	private final boolean createNewSave(boolean delete)
+	private boolean createNewSave(boolean delete)
 	{
 		try
 		{
@@ -143,7 +144,7 @@ public class SignHandler
 		signs.clear();
 	}
 
-	private final void updateAllSigns()
+	private void updateAllSigns()
 	{
 		for (ArenaSign sign : getSigns())
 		{
@@ -164,7 +165,7 @@ public class SignHandler
 	/**
 	 * Attempts to get an {@link ArenaSign} based on location
 	 *
-	 * @param loc - {@link ArenaLocation}
+	 * @param location - {@link LazyLocation}
 	 */
 	public final ArenaSign getSign(LazyLocation location)
 	{
@@ -208,9 +209,9 @@ public class SignHandler
 	}
 
 	/**
-	 * Updates an {@link ArenaZone}'s signs
+	 * Updates an arena's signs
 	 *
-	 * @param az - {@link ArenaZone}
+	 * @param name - Arena name
 	 */
 	public final void updateSigns(String name)
 	{
@@ -221,7 +222,7 @@ public class SignHandler
 	}
 
 	/**
-	 * Clears an {@link ArenaZone}'s signs
+	 * Clears an arena's signs
 	 *
 	 * @param name - Arena name
 	 */
@@ -272,7 +273,7 @@ public class SignHandler
 		return id;
 	}
 
-	private final int recurseFreeId(int start, Set<Integer> keySet)
+	private int recurseFreeId(int start, Set<Integer> keySet)
 	{
 		int id = start;
 		for (int i : keySet)
@@ -284,9 +285,9 @@ public class SignHandler
 		return id;
 	}
 
-	private final Map<Integer, ArenaSign> getById()
+	private Map<Integer, ArenaSign> getById()
 	{
-		Map<Integer, ArenaSign> ret = new HashMap<Integer, ArenaSign>();
+		Map<Integer, ArenaSign> ret = new HashMap<>();
 		for (ArenaSign sign : getSigns())
 		{
 			ret.put(sign.getId(), sign);

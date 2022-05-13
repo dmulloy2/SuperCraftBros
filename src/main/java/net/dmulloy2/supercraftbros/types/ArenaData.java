@@ -70,14 +70,14 @@ public class ArenaData implements ConfigurationSerializable
 							field.setAccessible(false);
 					}
 				}
-			} catch (Throwable ex) { }
+			} catch (Throwable ignored) { }
 		}
 	}
 
 	@Override
 	public Map<String, Object> serialize()
 	{
-		Map<String, Object> data = new HashMap<String, Object>();
+		Map<String, Object> data = new HashMap<>();
 
 		for (Field field : getClass().getDeclaredFields())
 		{
@@ -126,7 +126,7 @@ public class ArenaData implements ConfigurationSerializable
 				}
 
 				field.setAccessible(accessible);
-			} catch (Throwable ex) { }
+			} catch (Throwable ignored) { }
 		}
 
 		return data;

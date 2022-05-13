@@ -86,20 +86,11 @@ public final class ArenaSign implements ConfigurationSerializable
 			Arena ar = getArena();
 			switch (ar.getGameMode())
 			{
-				case LOBBY:
-					line.append(FormatUtil.format("&aJoin - {0}", ar.getCountdown()));
-					break;
-				case INGAME:
-					line.append(FormatUtil.format("&eIn Game"));
-					break;
-				case IDLE:
-					line.append(FormatUtil.format("&aJoin"));
-					break;
-				case STOPPING:
-					line.append(FormatUtil.format("&eStopping"));
-					break;
-				default:
-					break;
+				case LOBBY -> line.append(FormatUtil.format("&aJoin - {0}", ar.getCountdown()));
+				case INGAME -> line.append(FormatUtil.format("&eIn Game"));
+				case IDLE -> line.append(FormatUtil.format("&aJoin"));
+				case STOPPING -> line.append(FormatUtil.format("&eStopping"));
+				default -> { }
 			}
 		}
 		else
@@ -117,24 +108,19 @@ public final class ArenaSign implements ConfigurationSerializable
 
 			switch (ar.getGameMode())
 			{
-				case IDLE:
-					line.append("IDLE (0/4)");
-					break;
-				case INGAME:
+				case IDLE -> line.append("IDLE (0/4)");
+				case INGAME -> {
 					line.append("INGAME (");
 					line.append(ar.getPlayerCount());
 					line.append("/4)");
-					break;
-				case LOBBY:
+				}
+				case LOBBY -> {
 					line.append("LOBBY (");
 					line.append(ar.getPlayerCount());
 					line.append("/4)");
-					break;
-				case STOPPING:
-					line.append("STOPPING (0/4)");
-					break;
-				default:
-					break;
+				}
+				case STOPPING -> line.append("STOPPING (0/4)");
+				default -> { }
 			}
 		}
 		else
@@ -146,7 +132,7 @@ public final class ArenaSign implements ConfigurationSerializable
 		sign.update();
 	}
 
-	private final void getSign()
+	private void getSign()
 	{
 		Block block = location.getLocation().getBlock();
 		if (block.getState() instanceof Sign)
@@ -161,7 +147,7 @@ public final class ArenaSign implements ConfigurationSerializable
 	/**
 	 * Clears the sign
 	 */
-	public final void clear()
+	public void clear()
 	{
 		// Update the sign
 		this.getSign();
@@ -191,12 +177,12 @@ public final class ArenaSign implements ConfigurationSerializable
 		sign.update();
 	}
 
-	private final boolean isActive()
+	private boolean isActive()
 	{
 		return getArena() != null;
 	}
 
-	private final Arena getArena()
+	private Arena getArena()
 	{
 		return plugin.getArena(arenaName);
 	}

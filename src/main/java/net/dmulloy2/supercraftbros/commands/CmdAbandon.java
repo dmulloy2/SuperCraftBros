@@ -1,6 +1,7 @@
 package net.dmulloy2.supercraftbros.commands;
 
 import net.dmulloy2.supercraftbros.SuperCraftBros;
+import net.dmulloy2.supercraftbros.types.ArenaCreator;
 import net.dmulloy2.supercraftbros.types.Permission;
 
 /**
@@ -22,13 +23,14 @@ public class CmdAbandon extends SuperCraftBrosCommand
 	@Override
 	public void perform()
 	{
-		if (! plugin.isCreatingArena(player))
+		ArenaCreator ac = plugin.getArenaCreator(player);
+		if (ac == null)
 		{
 			err("&cYou are not creating an arena!");
 			return;
 		}
 		
-		plugin.getArenaCreator(player).abandon();
+		ac.abandon();
 		
 		sendpMessage("&cYou have stopped creating the arena!");
 	}

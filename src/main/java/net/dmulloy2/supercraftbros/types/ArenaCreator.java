@@ -10,21 +10,18 @@ import net.dmulloy2.util.FormatUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.bukkit.selections.Selection;
-
 public class ArenaCreator
 {
 	private int step;
 	
-	private Player player;
+	private final Player player;
 	
-	private ArenaData data;
+	private final ArenaData data;
 	
-	private List<Location> spawns;
+	private final List<Location> spawns;
 	
-	private List<Location> boardMaxLocations;
-	private List<Location> boardMinLocations;
+	private final List<Location> boardMaxLocations;
+	private final List<Location> boardMinLocations;
 	
 	private final SuperCraftBros plugin;
 
@@ -40,10 +37,10 @@ public class ArenaCreator
 		
 		data.setName(name);
 		
-		this.spawns = new ArrayList<Location>();
+		this.spawns = new ArrayList<>();
 		
-		this.boardMaxLocations = new ArrayList<Location>();
-		this.boardMinLocations = new ArrayList<Location>();
+		this.boardMaxLocations = new ArrayList<>();
+		this.boardMinLocations = new ArrayList<>();
 		
 		start();
 	}
@@ -95,25 +92,17 @@ public class ArenaCreator
 	//------------------------------------//
 	public void setPoint()
 	{
-		if (! plugin.isWorldEditEnabled())
-		{
-			sendMessage("&cYou must have WorldEdit installed!");
-			return;
-		}
-
-		WorldEditPlugin we = plugin.getWorldEditHandler().getDependency();
-
 		if (step == 1)
 		{
-			Selection sel = we.getSelection(player);
+			Object sel = null;
 			if (sel == null)
 			{
-				sendMessage("&cYou must have a valid WorldEdit selection to do this!");
+				sendMessage("&cYou must have a valid selection to do this!");
 				return;
 			}
 			
-			Location max = sel.getMaximumPoint();
-			Location min = sel.getMinimumPoint();
+			Location max = null;
+			Location min = null;
 			
 			data.setMaxArenaLocation(new LazyLocation(max));
 			data.setMinArenaLocation(new LazyLocation(min));
@@ -126,15 +115,15 @@ public class ArenaCreator
 		
 		if (step == 2)
 		{
-			Selection sel = we.getSelection(player);
+			Object sel = null;
 			if (sel == null)
 			{
-				sendMessage("&cYou must have a valid WorldEdit selection to do this!");
+				sendMessage("&cYou must have a valid selection to do this!");
 				return;
 			}
 			
-			Location max = sel.getMaximumPoint();
-			Location min = sel.getMinimumPoint();
+			Location max = null;
+			Location min = null;
 			
 			data.setMaxLobbyLocation(new LazyLocation(max));
 			data.setMinLobbyLocation(new LazyLocation(min));
@@ -177,17 +166,17 @@ public class ArenaCreator
 		
 		if (step == 5)
 		{
-			Selection sel = we.getSelection(player);
+			Object sel = null;
 			if (sel == null)
 			{
 				sendMessage("&cYou must have a valid WorldEdit selection to do this!");
 				return;
 			}
 			
-			Location max = sel.getMaximumPoint();
+			Location max = null;
 			boardMaxLocations.add(max);
 			
-			Location min = sel.getMinimumPoint();
+			Location min = null;
 			boardMinLocations.add(min);
 			
 			sendMessage("&aSet board &e{0} &ain arena &e{1}", boardMaxLocations.size(), data.getName());
@@ -207,7 +196,6 @@ public class ArenaCreator
 				sendMessage("&aBoard locations set!");
 				
 				finish();
-				return;
 			}
 		}
 	}

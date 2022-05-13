@@ -52,14 +52,14 @@ public enum HeadType
 	private final String name;
 	private final String configName;
 
-	private HeadType(String name, String configName)
+	HeadType(String name, String configName)
 	{
 		this.data = (short) 3;
 		this.name = name;
 		this.configName = configName;
 	}
 
-	private HeadType(int data, String configName)
+	HeadType(int data, String configName)
 	{
 		this.data = (short) data;
 		this.name = "";
@@ -79,9 +79,9 @@ public enum HeadType
 
 	public final ItemStack toItemStack()
 	{
-		ItemStack ret = new ItemStack(Material.SKULL_ITEM, 1, data);
+		ItemStack ret = new ItemStack(Material.PLAYER_HEAD, 1, data);
 
-		if (name != "")
+		if (!"".equals(name))
 		{
 			SkullMeta meta = (SkullMeta) ret.getItemMeta();
 			meta.setOwner(name);

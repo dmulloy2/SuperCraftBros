@@ -21,10 +21,11 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 public class ArenaClass
 {
 	private String name;
-	private String extension = ".yml";
+	private static final String extension = ".yml";
+	private static final String[] armorTypes = new String[] { "helmet", "chestplate", "leggings", "boots" };
 
-	private List<ItemStack> armor;
-	private List<ItemStack> weapons;
+	private final List<ItemStack> armor;
+	private final List<ItemStack> weapons;
 
 	private ItemStack icon;
 
@@ -44,7 +45,7 @@ public class ArenaClass
 	// ------------------------------------//
 	// Load
 	// ------------------------------------//
-	private final void load(File file)
+	private void load(File file)
 	{
 		try
 		{
@@ -57,22 +58,21 @@ public class ArenaClass
 				for (String key : values.keySet())
 				{
 					String s = fc.getString("weapons." + key);
-					if (s.startsWith("head:"))
+					if (s != null && s.startsWith("head:"))
 					{
 						s = s.substring(s.indexOf(":"));
 						HeadType type = HeadType.toHeadType(s);
 						if (type != null)
 						{
 							ItemStack stack = type.toItemStack();
-							if (stack != null)
-								weapons.add(stack);
+							weapons.add(stack);
 						}
 					}
 					else
 					{
 						try
 						{
-							ItemStack stack = ItemUtil.readItem(s);
+							ItemStack stack = ItemUtil.readItem(s, plugin);
 							if (stack != null)
 								weapons.add(stack);
 						}
@@ -84,77 +84,26 @@ public class ArenaClass
 				}
 			}
 
-			// ---- Armor
-			if (fc.isSet("armor.boots"))
+			for (String armorType : armorTypes)
 			{
-				String s = fc.getString("armor.boots");
-
-				try
+				String itemStr = fc.getString("armor.%s".formatted(armorType));
+				if (itemStr != null)
 				{
-					ItemStack stack = ItemUtil.readItem(s);
-					if (stack != null)
-						armor.add(stack);
-				}
-				catch (Throwable ex)
-				{
-					plugin.getLogHandler().log(Level.WARNING, Util.getUsefulStack(ex, "parsing item \"" + s + "\""));
-				}
-			}
-
-			if (fc.isSet("armor.leggings"))
-			{
-				String s = fc.getString("armor.leggings");
-
-				try
-				{
-					ItemStack stack = ItemUtil.readItem(s);
-					if (stack != null)
-						armor.add(stack);
-				}
-				catch (Throwable ex)
-				{
-					plugin.getLogHandler().log(Level.WARNING, Util.getUsefulStack(ex, "parsing item \"" + s + "\""));
-				}
-			}
-
-			if (fc.isSet("armor.chestplate"))
-			{
-				String s = fc.getString("armor.chestplate");
-
-				try
-				{
-					ItemStack stack = ItemUtil.readItem(s);
-					if (stack != null)
-						armor.add(stack);
-				}
-				catch (Throwable ex)
-				{
-					plugin.getLogHandler().log(Level.WARNING, Util.getUsefulStack(ex, "parsing item \"" + s + "\""));
-				}
-			}
-
-			if (fc.isSet("armor.helmet"))
-			{
-				String s = fc.getString("armor.helmet");
-				if (s.startsWith("head:"))
-				{
-					s = s.substring(s.indexOf(":") + 1);
-					HeadType type = HeadType.toHeadType(s);
-					if (type != null)
+					if (itemStr.startsWith("head:"))
 					{
-						ItemStack stack = type.toItemStack();
-						if (stack != null)
+						itemStr = itemStr.substring(itemStr.indexOf(":") + 1);
+						HeadType type = HeadType.toHeadType(itemStr);
+						if (type != null)
 						{
+							ItemStack stack = type.toItemStack();
 							armor.add(stack);
 						}
 					}
-				}
-				else
-				{
-					ItemStack stack = ItemUtil.readItem(s);
-					if (stack != null)
+					else
 					{
-						armor.add(stack);
+						ItemStack stack = ItemUtil.readItem(itemStr, plugin);
+						if (stack != null)
+							armor.add(stack);
 					}
 				}
 			}
@@ -166,28 +115,28 @@ public class ArenaClass
 			// ---- Icon
 			ItemStack icon = null;
 			String s = fc.getString("icon");
-			if (s.startsWith("head:"))
+			if (s != null)
 			{
-				s = s.substring(s.indexOf(":") + 1);
-				HeadType type = HeadType.toHeadType(s);
-				if (type != null)
+				if (s.startsWith("head:"))
 				{
-					icon = type.toItemStack();
+					s = s.substring(s.indexOf(":") + 1);
+					HeadType type = HeadType.toHeadType(s);
+					if (type != null)
+					{
+						icon = type.toItemStack();
+					}
 				}
-			}
-			else
-			{
-				try
+				else
 				{
-					icon = ItemUtil.readItem(s);
-				}
-				catch (Throwable ex)
-				{
-					plugin.getLogHandler().log(Level.WARNING, Util.getUsefulStack(ex, "parsing item \"" + s + "\""));
+					icon = ItemUtil.readItem(s, plugin);
 				}
 			}
 
-			if (icon != null)
+			if (icon == null)
+			{
+				icon = HeadType.SKELETON.toItemStack();
+			}
+			else
 			{
 				ItemMeta meta = icon.getItemMeta();
 
@@ -200,11 +149,12 @@ public class ArenaClass
 			this.icon = icon;
 
 			// ---- Color
-			if (fc.isSet("color"))
+			String dcStr = fc.getString("color");
+			if (dcStr != null)
 			{
-				DyeColor dc = DyeColor.valueOf(fc.getString("color"));
-				if (dc != null)
+				try
 				{
+					DyeColor dc = DyeColor.valueOf(dcStr.toUpperCase());
 					Color color = dc.getColor();
 					for (ItemStack stack : armor)
 					{
@@ -216,6 +166,10 @@ public class ArenaClass
 							stack.setItemMeta(armorMeta);
 						}
 					}
+				}
+				catch (IllegalArgumentException ex)
+				{
+					plugin.getLogHandler().log(Level.WARNING, "Invalid color {0} for class {1}", dcStr, name);
 				}
 			}
 		}

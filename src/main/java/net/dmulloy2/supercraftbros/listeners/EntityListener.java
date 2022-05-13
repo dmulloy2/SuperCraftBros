@@ -35,9 +35,8 @@ public class EntityListener implements Listener
 	public void onEntityShootBow(EntityShootBowEvent event)
 	{
 		Entity entity = event.getEntity();
-		if (entity instanceof Player)
+		if (entity instanceof Player shooter)
 		{
-			Player shooter = (Player)entity;
 			if (plugin.isInArena(shooter))
 			{
 				ArenaPlayer ap = plugin.getArenaPlayer(shooter);
@@ -55,14 +54,12 @@ public class EntityListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEntityDamageByEntity(EntityDamageByEntityEvent event)
 	{
-		Entity damaged = event.getEntity();
-		if (damaged instanceof LivingEntity)
+		if (event.getEntity() instanceof LivingEntity damaged)
 		{
-			LivingEntity lentity = (LivingEntity)damaged;
 			Entity damager = event.getDamager();
 			if (damager instanceof WitherSkull)
 			{
-				lentity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 10, 1, true));
+				damaged.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 10, 1, true));
 			}
 		}
 	}
@@ -70,10 +67,8 @@ public class EntityListener implements Listener
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onEntityDamage(EntityDamageEvent event)
 	{
-		Entity entity = event.getEntity();
-		if (entity instanceof Player)
+		if (event.getEntity() instanceof Player player)
 		{
-			Player player = (Player)entity;
 			if (plugin.isInArena(player))
 			{
 				Arena a = plugin.getArena(player);

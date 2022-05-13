@@ -53,7 +53,6 @@ public class BlockListener implements Listener
 						FormatUtil.format("&cYou cannot break this!"));
 
 				event.setCancelled(true);
-				return;
 			}
 		}
 	}
@@ -82,7 +81,6 @@ public class BlockListener implements Listener
 						FormatUtil.format("&cYou cannot place this!"));
 
 				event.setCancelled(true);
-				return;
 			}
 		}
 	}
@@ -90,11 +88,11 @@ public class BlockListener implements Listener
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onSignChange(SignChangeEvent event)
 	{
-		if (event.getLine(0).equalsIgnoreCase("[SCB]"))
+		if ("[SCB]".equalsIgnoreCase(event.getLine(0)))
 		{
 			if (plugin.getPermissionHandler().hasPermission(event.getPlayer(), Permission.BUILD))
 			{
-				if (event.getLine(1).equalsIgnoreCase("Click to join"))
+				if ("Click to join".equalsIgnoreCase(event.getLine(1)))
 				{
 					if (plugin.isValidArena(event.getLine(2)))
 					{
@@ -127,9 +125,8 @@ public class BlockListener implements Listener
 	{
 		Block block = event.getBlock();
 		Player player = event.getPlayer();
-		if (block.getState() instanceof Sign)
+		if (block.getState() instanceof Sign s)
 		{
-			Sign s = (Sign)block.getState();
 			if (s.getLine(0).equalsIgnoreCase("[SCB]"))
 			{
 				ArenaSign sign = plugin.getSignHandler().getSign(block.getLocation());

@@ -32,7 +32,7 @@ public class CmdCreate extends SuperCraftBrosCommand
 		
 		if (plugin.isInArena(player))
 		{
-			err("&cYou cannot create an arena while ingame!");
+			err("&cYou cannot create an arena while in-game!");
 			return;
 		}
 		

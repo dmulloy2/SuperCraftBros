@@ -54,11 +54,11 @@ public class PlayerListener implements Listener
 		Player player = event.getPlayer();
 		if (plugin.isWaiting(player))
 		{
-			ArenaJoinTask task = plugin.getWaiting().get(player.getName());
+			ArenaJoinTask task = plugin.getWaiting().get(player.getUniqueId());
 
 			task.cancel();
 
-			plugin.getWaiting().remove(player.getName());
+			plugin.getWaiting().remove(player.getUniqueId());
 
 			player.sendMessage(plugin.getPrefix() + FormatUtil.format("&cCancelled!"));
 		}
@@ -73,7 +73,7 @@ public class PlayerListener implements Listener
 		if (event.getCause() == TeleportCause.COMMAND)
 		{
 			event.setCancelled(true);
-			event.getPlayer().sendMessage(plugin.getPrefix() + FormatUtil.format("&cCannot teleport while ingame!"));
+			event.getPlayer().sendMessage(plugin.getPrefix() + FormatUtil.format("&cCannot teleport while in-game!"));
 		}
 	}
 
@@ -92,32 +92,28 @@ public class PlayerListener implements Listener
 		onPlayerDisconnect(event.getPlayer());
 	}
 
-	private final void onPlayerDisconnect(Player player)
+	private void onPlayerDisconnect(Player player)
 	{
-		if (plugin.isInArena(player))
+		ArenaPlayer ap = plugin.getArenaPlayer(player);
+		if (ap != null)
 		{
-			Arena a = plugin.getArena(player);
-			a.endPlayer(plugin.getArenaPlayer(player));
+			Arena arena = ap.getArena();
+			arena.endPlayer(ap);
 		}
 
 		if (plugin.isWaiting(player))
 		{
-			plugin.getWaiting().get(player.getName()).cancel();
-			plugin.getWaiting().remove(player.getName());
+			plugin.getWaiting().get(player.getUniqueId()).cancel();
+			plugin.getWaiting().remove(player.getUniqueId());
 		}
-
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerDeath(PlayerDeathEvent event)
 	{
-		Player player = event.getEntity();
-		if (plugin.isInArena(player))
-		{
-			Arena a = plugin.getArena(player);
-			ArenaPlayer ap = plugin.getArenaPlayer(player);
-			a.onPlayerDeath(ap);
-		}
+		ArenaPlayer ap = plugin.getArenaPlayer(event.getEntity());
+		if (ap != null)
+			ap.getArena().onPlayerDeath(ap);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -129,9 +125,8 @@ public class PlayerListener implements Listener
 			if (event.hasBlock())
 			{
 				Block block = event.getClickedBlock();
-				if (block.getState() instanceof Sign)
+				if (block.getState() instanceof Sign s)
 				{
-					Sign s = (Sign) block.getState();
 					if (s.getLine(0).equalsIgnoreCase("[SCB]"))
 					{
 						if (s.getLine(1).equalsIgnoreCase("Characters"))
@@ -151,7 +146,7 @@ public class PlayerListener implements Listener
 
 	// ---- Double Jump
 
-	private List<String> justJumped = new ArrayList<String>();
+	private final List<String> justJumped = new ArrayList<>();
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerRespawn(PlayerRespawnEvent event)
@@ -176,7 +171,8 @@ public class PlayerListener implements Listener
 		public void run()
 		{
 			ArenaPlayer ap = plugin.getArenaPlayer(player);
-			ap.getArena().spawn(ap);
+			if (ap != null)
+				ap.getArena().spawn(ap);
 		}
 	}
 
@@ -201,7 +197,7 @@ public class PlayerListener implements Listener
 					player.setVelocity(jump.add(look));
 					player.setAllowFlight(false);
 
-					player.playSound(player.getLocation(), Sound.ENTITY_IRONGOLEM_ATTACK, 10.0F, -10.0F);
+					player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_ATTACK, 10.0F, -10.0F);
 
 					for (int i = 0; i <= 10; i++)
 						world.playEffect(player.getLocation(), Effect.SMOKE, i);

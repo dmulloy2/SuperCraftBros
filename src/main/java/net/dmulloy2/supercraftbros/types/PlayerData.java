@@ -15,20 +15,20 @@ import org.bukkit.inventory.ItemStack;
 @Getter
 public final class PlayerData
 {
-	private boolean allowFlight;
-	private float exhaustion;
-	private float exp;
-	private int fireTicks;
-	private float flySpeed;
-	private boolean flying;
-	private int foodLevel;
-	private GameMode gameMode;
-	private double health;
-	private ItemStack[] armorContents;
-	private ItemStack[] contents;
-	private int level;
-	private float saturation;
-	private int totalExperience;
+	private final boolean allowFlight;
+	private final float exhaustion;
+	private final float exp;
+	private final int fireTicks;
+	private final float flySpeed;
+	private final boolean flying;
+	private final int foodLevel;
+	private final GameMode gameMode;
+	private final double health;
+	private final ItemStack[] armorContents;
+	private final ItemStack[] contents;
+	private final int level;
+	private final float saturation;
+	private final int totalExperience;
 
 	private final Player player;
 
@@ -51,7 +51,7 @@ public final class PlayerData
 		this.player = player;
 	}
 
-	public final void apply()
+	public void apply()
 	{
 		player.setAllowFlight(allowFlight);
 		player.setExhaustion(exhaustion);
