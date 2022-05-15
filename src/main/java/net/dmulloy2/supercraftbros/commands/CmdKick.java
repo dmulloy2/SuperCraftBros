@@ -2,6 +2,7 @@ package net.dmulloy2.supercraftbros.commands;
 
 import net.dmulloy2.supercraftbros.SuperCraftBros;
 import net.dmulloy2.supercraftbros.types.ArenaLeaveReason;
+import net.dmulloy2.supercraftbros.types.ArenaPlayer;
 import net.dmulloy2.supercraftbros.types.Permission;
 import net.dmulloy2.util.Util;
 
@@ -33,14 +34,15 @@ public class CmdKick extends SuperCraftBrosCommand
 			err("&cPlayer not found!");
 			return;
 		}
-		
-		if (! plugin.isInArena(target))
+
+		ArenaPlayer ap = plugin.getArenaPlayer(target);
+		if (ap == null)
 		{
 			err("&cThis player is not in a game!");
 			return;
 		}
-		
-		plugin.getArena(target).leaveArena(plugin.getArenaPlayer(target), ArenaLeaveReason.KICK);
+
+		ap.getArena().leaveArena(plugin.getArenaPlayer(target), ArenaLeaveReason.KICK);
 		
 		sendpMessage("&eYou have kicked {0} from the game!", target.getName());
 	}

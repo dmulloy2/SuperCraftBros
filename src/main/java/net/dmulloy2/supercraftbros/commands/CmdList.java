@@ -27,7 +27,7 @@ public class CmdList extends SuperCraftBrosCommand
 	@Override
 	public void perform()
 	{
-		List<String> lines = new ArrayList<String>();
+		List<String> lines = new ArrayList<>();
 		
 		StringBuilder line = new StringBuilder();
 		line.append("&3====[ &eAvailable Arenas &3]====");
@@ -36,35 +36,26 @@ public class CmdList extends SuperCraftBrosCommand
 		for (Entry<String, ArenaData> data : plugin.getArenaDataHandler().getAllArenaData().entrySet())
 		{
 			line = new StringBuilder();
-			line.append("&b[&e" + data.getValue().getName() + " &eArena&b]    ");
+			line.append("&b[&e").append(data.getValue().getName()).append(" &eArena&b]    ");
 			
 			if (data.getValue().isActive())
 			{
 				Arena a = plugin.getArena(data.getValue().getName());
 				switch (a.getGameMode())
 				{
-					case IDLE:
-						line.append("&e[IDLE]");
-						break;
-					case INGAME:
+					case IDLE -> line.append("&e[IDLE]");
+					case INGAME -> {
 						line.append("&a[INGAME | ");
-						line.append(a.getPlayerCount() + "]");
-						break;
-					case LOBBY:
+						line.append(a.getPlayerCount()).append("]");
+					}
+					case LOBBY -> {
 						line.append("&a[LOBBY | ");
-						line.append(a.getPlayerCount() + "]");
-						break;
-					case STARTING:
-						line.append("&a[STARTING]");
-						break;
-					case STOPPED:
-						line.append("&e[STOPPED]");
-						break;
-					case STOPPING:
-						line.append("&e[STOPPING]");
-						break;
-					default:
-						break;	
+						line.append(a.getPlayerCount()).append("]");
+					}
+					case STARTING -> line.append("&a[STARTING]");
+					case STOPPED -> line.append("&e[STOPPED]");
+					case STOPPING -> line.append("&e[STOPPING]");
+					default -> {}
 				}
 			}
 			else

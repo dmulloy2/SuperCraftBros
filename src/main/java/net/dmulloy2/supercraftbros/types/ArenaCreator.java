@@ -2,13 +2,16 @@ package net.dmulloy2.supercraftbros.types;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import net.dmulloy2.supercraftbros.SuperCraftBros;
 import net.dmulloy2.types.LazyLocation;
 import net.dmulloy2.util.FormatUtil;
 
+import net.dmulloy2.util.InventoryUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class ArenaCreator
 {
@@ -17,12 +20,7 @@ public class ArenaCreator
 	private final Player player;
 	
 	private final ArenaData data;
-	
-	private final List<Location> spawns;
-	
-	private final List<Location> boardMaxLocations;
-	private final List<Location> boardMinLocations;
-	
+
 	private final SuperCraftBros plugin;
 
 	//------------------------------------//
@@ -36,183 +34,143 @@ public class ArenaCreator
 		this.data = plugin.getArenaDataHandler().newData(name);
 		
 		data.setName(name);
-		
-		this.spawns = new ArrayList<>();
-		
-		this.boardMaxLocations = new ArrayList<>();
-		this.boardMinLocations = new ArrayList<>();
+
+		this.generateSteps();
 		
 		start();
 	}
 	
 	private void start()
 	{
-		sendMessage("&bYou have began the creation of the arena &e{0}&b!", data.getName());
+		InventoryUtil.giveItem(player, new ItemStack(Constants.WAND_TYPE));
+
+		sendMessage("&bYou have started the creation of the arena &e{0}&b!", data.getName());
+		sendMessage("&bSet two points for the arena using your &eGold Axe");
 		
-		sendMessage("&bPlease set two points for the arena. Type &e/scb sp &bwhen done!");
-		
-		this.step = 1;
-	}
-	
-	//------------------------------------//
-	// Steps
-	//------------------------------------//
-	private void stepUp()
-	{
-		this.step++;
-		
-		stepInfo();
+		this.step = 0;
 	}
 
-	private void stepInfo()
-	{
-		if (step == 2)
-		{
-			sendMessage("&ePlease set two points for a lobby!");
-		}
-		
-		if (step == 3)
-		{
-			sendMessage("&ePlease set the lobby spawnpoint!");
-		}
-		
-		if (step == 4)
-		{
-			sendMessage("&ePlease set four arena spawnpoints!");
-		}
-		
-		if (step == 5)
-		{
-			sendMessage("&ePlease set four boards!");
-		}
-	}
-	
 	//------------------------------------//
 	// Point setting
 	//------------------------------------//
-	public void setPoint()
+
+	public void setPoint(Location location)
 	{
-		if (step == 1)
+		Consumer<LazyLocation> stepFunc = steps.get(step);
+		stepFunc.accept(new LazyLocation(location));
+
+		if (++step == steps.size())
 		{
-			Object sel = null;
-			if (sel == null)
-			{
-				sendMessage("&cYou must have a valid selection to do this!");
-				return;
-			}
-			
-			Location max = null;
-			Location min = null;
-			
-			data.setMaxArenaLocation(new LazyLocation(max));
-			data.setMinArenaLocation(new LazyLocation(min));
-			
-			sendMessage("&aArena points set!");
-			
-			stepUp();
-			return;
-		}
-		
-		if (step == 2)
-		{
-			Object sel = null;
-			if (sel == null)
-			{
-				sendMessage("&cYou must have a valid selection to do this!");
-				return;
-			}
-			
-			Location max = null;
-			Location min = null;
-			
-			data.setMaxLobbyLocation(new LazyLocation(max));
-			data.setMinLobbyLocation(new LazyLocation(min));
-			
-			sendMessage("&aLobby points set!");
-			
-			stepUp();
-			return;
-		}
-		
-		if (step == 3)
-		{
-			data.setLobbySpawn(new LazyLocation(player));
-			
-			sendMessage("&aLobby spawn set!");
-			
-			stepUp();
-			return;
-		}
-		
-		if (step == 4)
-		{
-			spawns.add(player.getLocation());
-			
-			sendMessage("&aSet spawn &e{0} &ain Arena &e{1}", spawns.size(), data.getName());
-			
-			if (spawns.size() == 4)
-			{
-				for (Location spawn : spawns)
-				{
-					data.getSpawns().add(new LazyLocation(spawn));
-				}
-				
-				sendMessage("&aSpawns set!");
-				
-				stepUp();
-				return;
-			}
-		}
-		
-		if (step == 5)
-		{
-			Object sel = null;
-			if (sel == null)
-			{
-				sendMessage("&cYou must have a valid WorldEdit selection to do this!");
-				return;
-			}
-			
-			Location max = null;
-			boardMaxLocations.add(max);
-			
-			Location min = null;
-			boardMinLocations.add(min);
-			
-			sendMessage("&aSet board &e{0} &ain arena &e{1}", boardMaxLocations.size(), data.getName());
-			
-			if (boardMaxLocations.size() == 4)
-			{
-				for (Location boardMax : boardMaxLocations)
-				{
-					data.getBoardMaxLocations().add(new LazyLocation(boardMax));
-				}
-				
-				for (Location boardMin : boardMinLocations)
-				{
-					data.getBoardMinLocations().add(new LazyLocation(boardMin));
-				}
-				
-				sendMessage("&aBoard locations set!");
-				
-				finish();
-			}
+			finish();
 		}
 	}
-	
+
+	public void undo()
+	{
+		step--;
+	}
+
+	private final List<Consumer<LazyLocation>> steps = new ArrayList<>();
+
+	private void generateSteps()
+	{
+		steps.add(this::setMinLocation);
+		steps.add(this::setMaxLocation);
+		steps.add(this::setMinLobbyLocation);
+		steps.add(this::setMaxLobbyLocation);
+		steps.add(this::setLobbySpawn);
+
+		for (int i = 0; i < 4; i++)
+		{
+			steps.add(this::addArenaSpawn);
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			steps.add(this::addBoardMin);
+			steps.add(this::addBoardMax);
+		}
+	}
+
+	private void setMinLocation(LazyLocation location)
+	{
+		data.setMinArenaLocation(location);
+		sendMessage("&aFirst arena point set. Select opposite corner.");
+	}
+
+	private void setMaxLocation(LazyLocation loc)
+	{
+		data.setMaxArenaLocation(loc);
+		sendMessage("&aLast arena arena set. Select first lobby point.");
+	}
+
+	private void setMinLobbyLocation(LazyLocation location)
+	{
+		data.setMinLobbyLocation(location);
+		sendMessage("&aFirst lobby point set. Select opposite corner next.");
+	}
+
+	private void setMaxLobbyLocation(LazyLocation location)
+	{
+		data.setMaxLobbyLocation(location);
+		sendMessage("&aLast lobby point set. Set lobby spawn.");
+	}
+
+	private void setLobbySpawn(LazyLocation location)
+	{
+		data.setLobbySpawn(location);
+		sendMessage("&aLobby spawn set. Add 4 arena spawns.");
+	}
+
+	private void addArenaSpawn(LazyLocation location)
+	{
+		List<LazyLocation> spawns = data.getSpawns();
+		spawns.add(location);
+		sendMessage("&aSet spawn #&e{0}", spawns.size(), data.getName());
+
+		if (spawns.size() == 4)
+			sendMessage("&aAdd 4 boards by selecting two corner points.");
+	}
+
+	private void addBoardMin(LazyLocation loc)
+	{
+		data.getBoardMinLocations().add(loc);
+		sendMessage("&aBoard point set. Set other corner.");
+	}
+
+	private void addBoardMax(LazyLocation loc)
+	{
+		data.getBoardMaxLocations().add(loc);
+		sendMessage("&aBoard completed.");
+
+		if (data.getBoardMaxLocations().size() == 4)
+		{
+			sendMessage("&aBoards completed");
+			finish();
+		}
+		else
+		{
+			sendMessage("&aSelect one corner of the next board.");
+		}
+	}
+
 	private void finish()
 	{
 		plugin.getArenaDataHandler().save();
-		
-		plugin.removeArenaCreator(this);
-		
 		sendMessage("&aYou have completed the creation of arena &e{0}&a!", data.getName());
+		cleanUp();
 	}
 	
 	public void abandon()
 	{
 		plugin.getArenaDataHandler().deleteData(data.getName());
-		
+		sendMessage("Arena creation cancelled");
+		cleanUp();
+	}
+
+	private void cleanUp()
+	{
+		InventoryUtil.remove(player.getInventory(), Constants.WAND_TYPE, (short) -1, 1);
 		plugin.removeArenaCreator(this);
 	}
 	
@@ -228,12 +186,7 @@ public class ArenaCreator
 	{
 		return player.getName();
 	}
-	
-	public final ArenaData getArenaData()
-	{
-		return data;
-	}
-	
+
 	//------------------------------------//
 	// Messaging
 	//------------------------------------//

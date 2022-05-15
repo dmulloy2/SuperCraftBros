@@ -37,9 +37,9 @@ public class EntityListener implements Listener
 		Entity entity = event.getEntity();
 		if (entity instanceof Player shooter)
 		{
-			if (plugin.isInArena(shooter))
+			ArenaPlayer ap = plugin.getArenaPlayer(shooter);
+			if (ap != null)
 			{
-				ArenaPlayer ap = plugin.getArenaPlayer(shooter);
 				if (ap.getArenaClass().getName().equalsIgnoreCase("wither"))
 				{
 					event.setCancelled(true);
@@ -64,14 +64,15 @@ public class EntityListener implements Listener
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onEntityDamage(EntityDamageEvent event)
 	{
 		if (event.getEntity() instanceof Player player)
 		{
-			if (plugin.isInArena(player))
+			ArenaPlayer ap = plugin.getArenaPlayer(player);
+			if (ap != null)
 			{
-				Arena a = plugin.getArena(player);
+				Arena a = ap.getArena();
 				if (a.getGameMode() == Mode.LOBBY)
 				{
 					event.setCancelled(true);
@@ -82,7 +83,7 @@ public class EntityListener implements Listener
 	
 	// ---- Arena Protection ---- //
 
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent event) 
 	{
 		if (! event.isCancelled())

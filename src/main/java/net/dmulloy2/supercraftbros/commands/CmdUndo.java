@@ -4,33 +4,28 @@ import net.dmulloy2.supercraftbros.SuperCraftBros;
 import net.dmulloy2.supercraftbros.types.ArenaCreator;
 import net.dmulloy2.supercraftbros.types.Permission;
 
-/**
- * @author dmulloy2
- */
-
-public class CmdAbandon extends SuperCraftBrosCommand
+public class CmdUndo extends SuperCraftBrosCommand
 {
-	public CmdAbandon(SuperCraftBros plugin)
+	public CmdUndo(SuperCraftBros plugin)
 	{
 		super(plugin);
-		this.name = "abandon";
-		this.description = "Abandons the creation of an arena";
+		this.name = "undo";
+		this.description = "Undoes last creation step";
 		this.permission = Permission.CMD_CREATE;
 		this.mustBePlayer = true;
 	}
-	
+
 	@Override
 	public void perform()
 	{
 		ArenaCreator ac = plugin.getArenaCreator(player);
 		if (ac == null)
 		{
-			err("&cYou are not creating an arena!");
+			err("You must be creating an arena to do this!");
 			return;
 		}
-		
-		ac.abandon();
-		
-		sendpMessage("&cYou have stopped creating the arena!");
+
+		ac.undo();
+		sendpMessage("Last step undone.");
 	}
 }

@@ -18,7 +18,7 @@ import org.bukkit.potion.PotionEffect;
 @Getter
 public class ArenaPlayer
 {
-	private int id;
+	private final int id;
 	private int lives = 5;
 
 	private boolean active;
@@ -119,11 +119,6 @@ public class ArenaPlayer
 			player.getInventory().setContents(arenaClass.getWeapons().toArray(new ItemStack[0]));
 			player.getInventory().setArmorContents(arenaClass.getArmor().toArray(new ItemStack[0]));
 		}
-	}
-
-	public void openClassInventory()
-	{
-		// TODO
 	}
 
 	// ------------------------------------//

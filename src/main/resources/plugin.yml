@@ -20,17 +20,12 @@ permissions:
   supercraftbros.builder:
     description: Allows access to features meant for builders
     children:
-      supercraftbros.abandon: true
       supercraftbros.create: true
-      supercraftbros.setpoint: true
       supercraftbros.spawn: true
       supercraftbros.build: true
       supercraftbros.join: true
-  supercraftbros.abandon:
-    description: Allows access to '/scb abandon'
-    default: false
   supercraftbros.create:
-    description: Allows access to '/scb create'
+    description: Allows access to '/scb create|sp|abandon|undo'
     default: false
   supercraftbros.delete:
     description: Allows access to '/scb delete'

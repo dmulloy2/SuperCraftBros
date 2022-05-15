@@ -2,6 +2,7 @@ package net.dmulloy2.supercraftbros.commands;
 
 import net.dmulloy2.supercraftbros.SuperCraftBros;
 import net.dmulloy2.supercraftbros.types.ArenaLeaveReason;
+import net.dmulloy2.supercraftbros.types.ArenaPlayer;
 
 /**
  * @author dmulloy2
@@ -22,12 +23,13 @@ public class CmdLeave extends SuperCraftBrosCommand
 	@Override
 	public void perform()
 	{
-		if (! plugin.isInArena(player))
+		ArenaPlayer ap = plugin.getArenaPlayer(player);
+		if (ap == null)
 		{
 			err("You are not in an arena!");
 			return;
 		}
 		
-		plugin.getArena(player).leaveArena(plugin.getArenaPlayer(player), ArenaLeaveReason.COMMAND);
+		ap.getArena().leaveArena(plugin.getArenaPlayer(player), ArenaLeaveReason.COMMAND);
 	}
 }

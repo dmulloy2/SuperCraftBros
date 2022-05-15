@@ -31,16 +31,7 @@ import net.dmulloy2.handlers.LogHandler;
 import net.dmulloy2.handlers.PermissionHandler;
 import net.dmulloy2.handlers.ResourceHandler;
 import net.dmulloy2.integration.VaultHandler;
-import net.dmulloy2.supercraftbros.commands.CmdAbandon;
-import net.dmulloy2.supercraftbros.commands.CmdCreate;
-import net.dmulloy2.supercraftbros.commands.CmdDelete;
-import net.dmulloy2.supercraftbros.commands.CmdJoin;
-import net.dmulloy2.supercraftbros.commands.CmdKick;
-import net.dmulloy2.supercraftbros.commands.CmdLeave;
-import net.dmulloy2.supercraftbros.commands.CmdList;
-import net.dmulloy2.supercraftbros.commands.CmdReload;
-import net.dmulloy2.supercraftbros.commands.CmdSetPoint;
-import net.dmulloy2.supercraftbros.commands.CmdSpawn;
+import net.dmulloy2.supercraftbros.commands.*;
 import net.dmulloy2.supercraftbros.handlers.ArenaDataHandler;
 import net.dmulloy2.supercraftbros.handlers.ClassHandler;
 import net.dmulloy2.supercraftbros.handlers.SignHandler;
@@ -80,7 +71,7 @@ public class SuperCraftBros extends SwornPlugin
 
 	private @Getter Map<UUID, ArenaJoinTask> waiting;
 
-	private List<Arena> activeArenas;
+	private Map<String, Arena> activeArenas;
 	private @Getter List<ArenaSign> signs;
 	private @Getter List<ArenaClass> classes;
 	private @Getter Map<UUID, ArenaCreator> creators;
@@ -119,7 +110,7 @@ public class SuperCraftBros extends SwornPlugin
 		signs = new ArrayList<>();
 		classes = new ArrayList<>();
 		creators = new ConcurrentHashMap<>();
-		activeArenas = new ArrayList<>();
+		activeArenas = new ConcurrentHashMap<>();
 
 		setupIntegration();
 
@@ -143,6 +134,7 @@ public class SuperCraftBros extends SwornPlugin
 		commandHandler.registerPrefixedCommand(new CmdReload(this));
 		commandHandler.registerPrefixedCommand(new CmdSetPoint(this));
 		commandHandler.registerPrefixedCommand(new CmdSpawn(this));
+		commandHandler.registerPrefixedCommand(new CmdUndo(this));
 
 		loadClasses();
 
@@ -158,11 +150,9 @@ public class SuperCraftBros extends SwornPlugin
 
 		getServer().getServicesManager().unregisterAll(this);
 		getServer().getScheduler().cancelTasks(this);
- 
-		for (Arena a : activeArenas)
-		{
-			a.stop();
-		}
+
+		Collection<Arena> arenas = activeArenas.values();
+		arenas.forEach(Arena::stop);
 
 		arenaDataHandler.save();
 		signHandler.onDisable();
@@ -224,56 +214,27 @@ public class SuperCraftBros extends SwornPlugin
 
 	public void addActiveArena(Arena arena)
 	{
-		activeArenas.add(arena);
+		activeArenas.put(arena.getName(), arena);
 	}
 
 	public void removeActiveArena(Arena arena)
 	{
-		activeArenas.remove(arena);
-	}
-
-	public boolean isActiveArena(String arena)
-	{
-		for (Arena a : activeArenas)
-		{
-			if (a.getName().equalsIgnoreCase(arena))
-				return true;
-		}
-
-		return false;
+		activeArenas.remove(arena.getName());
 	}
 
 	public Arena getArena(String name)
 	{
-		for (Arena a : activeArenas)
-		{
-			if (a.getName().equalsIgnoreCase(name))
-				return a;
-		}
-
-		return null;
-	}
-
-	public Arena getArena(Player player)
-	{
-		ArenaPlayer ap = getArenaPlayer(player);
-		if (ap != null)
-		{
-			return ap.getArena();
-		}
-
-		return null;
+		return activeArenas.get(name);
 	}
 
 	public ArenaPlayer getArenaPlayer(Player player)
 	{
-		for (Arena a : activeArenas)
+		UUID playerId = player.getUniqueId();
+		for (Arena a : activeArenas.values())
 		{
-			for (ArenaPlayer ap : a.getActive())
-			{
-				if (ap.getName().equals(player.getName()))
-					return ap;
-			}
+			ArenaPlayer ap = a.getActive().get(playerId);
+			if (ap != null)
+				return ap;
 		}
 
 		return null;
@@ -332,17 +293,6 @@ public class SuperCraftBros extends SwornPlugin
 		}
 	}
 
-	public ArenaClass getClass(String name)
-	{
-		for (ArenaClass ac : classes)
-		{
-			if (ac.getName().equalsIgnoreCase(name))
-				return ac;
-		}
-
-		return null;
-	}
-
 	public ArenaClass getClass(ItemStack stack)
 	{
 		for (ArenaClass ac : classes)
@@ -379,9 +329,9 @@ public class SuperCraftBros extends SwornPlugin
 			return;
 		}
 
-		if (isActiveArena(name))
+		Arena a = getArena(name);
+		if (a != null)
 		{
-			Arena a = getArena(name);
 			if (a.getGameMode() == Mode.LOBBY)
 			{
 				a.addPlayer(player);
@@ -395,7 +345,7 @@ public class SuperCraftBros extends SwornPlugin
 		{
 			if (isValidArena(name))
 			{
-				Arena a = new Arena(this, arenaDataHandler.getData(name));
+				a = new Arena(this, arenaDataHandler.getData(name));
 
 				if (getConfig().getBoolean("joinTimer.enabled"))
 				{

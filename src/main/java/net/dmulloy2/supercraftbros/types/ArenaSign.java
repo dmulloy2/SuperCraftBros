@@ -25,7 +25,7 @@ public final class ArenaSign implements ConfigurationSerializable
 	private final LazyLocation location;
 
 	private transient Sign sign;
-	private transient ArenaData data;
+	private final transient ArenaData data;
 	private transient final SuperCraftBros plugin;
 
 	public ArenaSign(SuperCraftBros plugin, Location location, ArenaData data, int id)

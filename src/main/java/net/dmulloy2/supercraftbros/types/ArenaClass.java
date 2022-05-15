@@ -159,9 +159,8 @@ public class ArenaClass
 					for (ItemStack stack : armor)
 					{
 						ItemMeta itemMeta = stack.getItemMeta();
-						if (itemMeta instanceof LeatherArmorMeta)
+						if (itemMeta instanceof LeatherArmorMeta armorMeta)
 						{
-							LeatherArmorMeta armorMeta = (LeatherArmorMeta) itemMeta;
 							armorMeta.setColor(color);
 							stack.setItemMeta(armorMeta);
 						}

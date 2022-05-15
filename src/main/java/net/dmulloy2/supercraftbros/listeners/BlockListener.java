@@ -137,7 +137,6 @@ public class BlockListener implements Listener
 						plugin.getSignHandler().deleteSign(sign);
 						player.sendMessage(plugin.getPrefix() +
 								FormatUtil.format("&eDeleted sign!"));
-						
 					}
 					else
 					{

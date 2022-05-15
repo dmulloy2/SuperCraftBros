@@ -33,10 +33,10 @@ public class ArenaData implements ConfigurationSerializable
 	private LazyLocation maxLobbyLocation;
 	private LazyLocation minLobbyLocation;
 
-	private List<LazyLocation> spawns = new ArrayList<LazyLocation>();
+	private List<LazyLocation> spawns = new ArrayList<>();
 
-	private List<LazyLocation> boardMaxLocations = new ArrayList<LazyLocation>();
-	private List<LazyLocation> boardMinLocations = new ArrayList<LazyLocation>();
+	private List<LazyLocation> boardMaxLocations = new ArrayList<>();
+	private List<LazyLocation> boardMinLocations = new ArrayList<>();
 
 	private LazyLocation lobbySpawn;
 
@@ -46,7 +46,7 @@ public class ArenaData implements ConfigurationSerializable
 	private transient boolean active;
 
 	@Setter(AccessLevel.NONE)
-	private Map<String, Object> data = new HashMap<String, Object>();
+	private Map<String, Object> data = new HashMap<>();
 
 	public ArenaData() { }
 

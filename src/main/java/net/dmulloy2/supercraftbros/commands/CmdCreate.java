@@ -17,7 +17,6 @@ public class CmdCreate extends SuperCraftBrosCommand
 		this.addRequiredArg("name");
 		this.description = "Creates an arena";
 		this.permission = Permission.CMD_CREATE;
-		
 		this.mustBePlayer = true;
 	}
 	

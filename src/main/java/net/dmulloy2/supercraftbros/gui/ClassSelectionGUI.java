@@ -21,6 +21,7 @@ import org.bukkit.inventory.Inventory;
 public class ClassSelectionGUI extends AbstractGUI
 {
 	private final SuperCraftBros plugin;
+
 	public ClassSelectionGUI(SuperCraftBros plugin, Player player)
 	{
 		super(plugin, player);
@@ -28,7 +29,7 @@ public class ClassSelectionGUI extends AbstractGUI
 		this.setup();
 	}
 
-	private final List<ArenaClass> getClasses()
+	private List<ArenaClass> getClasses()
 	{
 		return plugin.getClasses();
 	}
@@ -67,10 +68,10 @@ public class ClassSelectionGUI extends AbstractGUI
 	@Override
 	public void onInventoryClick(InventoryClickEvent event)
 	{
-		if (plugin.isInArena(player))
+		ArenaPlayer ap = plugin.getArenaPlayer(player);
+		if (ap != null)
 		{
 			ArenaClass ac = plugin.getClass(event.getCurrentItem());
-			ArenaPlayer ap = plugin.getArenaPlayer(player);
 			ap.setClass(ac);
 		}
 

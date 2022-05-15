@@ -1,14 +1,15 @@
 package net.dmulloy2.supercraftbros.listeners;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import lombok.AllArgsConstructor;
 import net.dmulloy2.supercraftbros.SuperCraftBros;
 import net.dmulloy2.supercraftbros.SuperCraftBros.ArenaJoinTask;
 import net.dmulloy2.supercraftbros.gui.ClassSelectionGUI;
 import net.dmulloy2.supercraftbros.types.Arena;
+import net.dmulloy2.supercraftbros.types.ArenaCreator;
 import net.dmulloy2.supercraftbros.types.ArenaPlayer;
+import net.dmulloy2.supercraftbros.types.Constants;
 import net.dmulloy2.util.FormatUtil;
 
 import org.bukkit.Effect;
@@ -32,6 +33,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -106,6 +108,12 @@ public class PlayerListener implements Listener
 			plugin.getWaiting().get(player.getUniqueId()).cancel();
 			plugin.getWaiting().remove(player.getUniqueId());
 		}
+
+		ArenaCreator ac = plugin.getArenaCreator(player);
+		if (ac != null)
+		{
+			ac.abandon();
+		}
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -117,28 +125,41 @@ public class PlayerListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
-	public void onSignInteract(PlayerInteractEvent event)
+	public void onPlayerInteract(PlayerInteractEvent event)
 	{
+		Block block = event.getClickedBlock();
+		if (block == null) return;
+
 		Player player = event.getPlayer();
-		if (plugin.isInArena(player))
+		if (block.getState() instanceof Sign sign)
 		{
-			if (event.hasBlock())
+			if ("[SCB]".equalsIgnoreCase(sign.getLine(0)))
 			{
-				Block block = event.getClickedBlock();
-				if (block.getState() instanceof Sign s)
+				String line1 = sign.getLine(1);
+				if ("Characters".equalsIgnoreCase(line1))
 				{
-					if (s.getLine(0).equalsIgnoreCase("[SCB]"))
+					if (plugin.isInArena(player))
 					{
-						if (s.getLine(1).equalsIgnoreCase("Characters"))
-						{
-							ClassSelectionGUI csGUI = new ClassSelectionGUI(plugin, player);
-							plugin.getGuiHandler().open(player, csGUI);
-						}
-						else if (s.getLine(1).equalsIgnoreCase("Click to join"))
-						{
-							plugin.joinArena(player, s.getLine(2));
-						}
+						ClassSelectionGUI csGUI = new ClassSelectionGUI(plugin, player);
+						plugin.getGuiHandler().open(player, csGUI);
 					}
+				}
+				else if ("Click to join".equalsIgnoreCase(line1))
+				{
+					String arena = sign.getLine(2);
+					plugin.joinArena(player, arena);
+				}
+			}
+		}
+		else
+		{
+			ArenaCreator creator = plugin.getArenaCreator(player);
+			if (creator != null)
+			{
+				ItemStack clickedWith = event.getItem();
+				if (clickedWith != null && clickedWith.getType() == Constants.WAND_TYPE)
+				{
+					creator.setPoint(block.getLocation());
 				}
 			}
 		}
@@ -146,7 +167,7 @@ public class PlayerListener implements Listener
 
 	// ---- Double Jump
 
-	private final List<String> justJumped = new ArrayList<>();
+	private final Set<UUID> justJumped = new HashSet<>();
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerRespawn(PlayerRespawnEvent event)
@@ -156,7 +177,7 @@ public class PlayerListener implements Listener
 		if (plugin.isInArena(player))
 		{
 			player.setAllowFlight(true);
-			justJumped.remove(player.getName());
+			justJumped.remove(player.getUniqueId());
 
 			new RespawnTask(player).runTaskLater(plugin, 20L);
 		}
@@ -180,7 +201,6 @@ public class PlayerListener implements Listener
 	public void setFlyOnJump(PlayerToggleFlightEvent event)
 	{
 		Player player = event.getPlayer();
-		String name = player.getName();
 		World world = player.getWorld();
 
 		Vector jump = player.getVelocity().multiply(1).setY(0.17D * 2);
@@ -190,7 +210,7 @@ public class PlayerListener implements Listener
 		{
 			if (plugin.isInArena(player))
 			{
-				if (!justJumped.contains(name))
+				if (!justJumped.contains(player.getUniqueId()))
 				{
 					player.setFlying(false);
 
@@ -224,14 +244,11 @@ public class PlayerListener implements Listener
 		{
 			if (block.getType() == Material.AIR)
 			{
-				if (!justJumped.contains(player.getName()))
-				{
-					justJumped.add(player.getName());
-				}
+				justJumped.add(player.getUniqueId());
 			}
-			else if (justJumped.contains(player.getName()))
+			else if (justJumped.contains(player.getUniqueId()))
 			{
-				justJumped.remove(player.getName());
+				justJumped.remove(player.getUniqueId());
 				player.setAllowFlight(true);
 				player.setFlying(false);
 			}

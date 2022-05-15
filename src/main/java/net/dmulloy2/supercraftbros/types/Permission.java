@@ -12,12 +12,10 @@ import net.dmulloy2.types.IPermission;
 @AllArgsConstructor
 public enum Permission implements IPermission
 {
-	CMD_ABANDON("abandon"),
 	CMD_CREATE("create"),
 	CMD_DELETE("delete"),
 	CMD_KICK("kick"),
 	CMD_RELOAD("reload"),
-	CMD_SET_POINT("setpoint"),
 	CMD_SPAWN("spawn"),
 
 	BUILD("build"),

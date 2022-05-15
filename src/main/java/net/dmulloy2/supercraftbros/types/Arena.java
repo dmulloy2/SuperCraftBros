@@ -1,8 +1,7 @@
 package net.dmulloy2.supercraftbros.types;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +18,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -40,7 +38,7 @@ public class Arena
 	
 	public enum Mode
 	{
-		IDLE, LOBBY, STARTING, INGAME, STOPPING, STOPPED;
+		IDLE, LOBBY, STARTING, INGAME, STOPPING, STOPPED
 	}
 
 	private Mode gameMode = Mode.IDLE;
@@ -55,8 +53,8 @@ public class Arena
 
 	// Lists
 	private final List<Board> boards;
-	private final List<ArenaPlayer> active;
-	private final List<ArenaPlayer> inactive;
+	private final Map<UUID, ArenaPlayer> active;
+	private final Map<UUID, ArenaPlayer> inactive;
 
 	private final String name;
 	private final ArenaData data;
@@ -77,8 +75,8 @@ public class Arena
 		this.lobbyField = data.getLobby();
 
 		this.boards = new ArrayList<>();
-		this.active = new ArrayList<>();
-		this.inactive = new ArrayList<>();
+		this.active = new ConcurrentHashMap<>();
+		this.inactive = new ConcurrentHashMap<>();
 
 		this.gameMode = Mode.LOBBY;
 
@@ -122,7 +120,7 @@ public class Arena
 		ap.clearPotionEffects();
 
 		ap.setActive(true);
-		active.add(ap);
+		active.put(player.getUniqueId(), ap);
 
 		updateSigns();
 
@@ -154,7 +152,7 @@ public class Arena
 	{
 		plugin.getLogHandler().log("Spawning all players for Arena: {0}", data.getName());
 
-		for (ArenaPlayer ap : active)
+		for (ArenaPlayer ap : active.values())
 		{
 			spawn(ap);
 		}
@@ -284,7 +282,7 @@ public class Arena
 
 	private void tellPlayers(String string, Object... objects)
 	{
-		for (ArenaPlayer activePlayer : active)
+		for (ArenaPlayer activePlayer : active.values())
 		{
 			activePlayer.sendMessage(string, objects);
 		}
@@ -307,7 +305,7 @@ public class Arena
 
 		updateSigns();
 
-		for (ArenaPlayer ap : active)
+		for (ArenaPlayer ap : active.values())
 		{
 			if (ap.isActive())
 			{
@@ -422,7 +420,7 @@ public class Arena
 	{
 		if (getPlayerCount() == 1)
 		{
-			for (ArenaPlayer ap : active)
+			for (ArenaPlayer ap : active.values())
 			{
 				String message = plugin.getPrefix() + FormatUtil.format("&e{0} &3won the game at &e{1}", ap.getName(), data.getName());
 
@@ -562,7 +560,7 @@ public class Arena
 
 	public void setupBoards()
 	{
-		for (ArenaPlayer ap : active)
+		for (ArenaPlayer ap : active.values())
 		{
 			boards.add(new Board(this, ap));
 		}
